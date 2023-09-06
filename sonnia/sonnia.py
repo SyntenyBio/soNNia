@@ -36,7 +36,7 @@ class SoNNia(Sonia):
     def __init__(self, data_seqs = [], gen_seqs = [], chain_type = 'humanTRB',
                  load_dir = None, feature_file = None, data_seq_file = None, gen_seq_file = None, log_file = None, load_seqs = True,
                  max_depth = 25, max_L = 30, include_indep_genes = True, include_joint_genes = False, min_energy_clip = -5, max_energy_clip = 10, seed = None,
-                 custom_pgen_model=None ,deep=True, l2_reg=0.,l1_reg=0.,joint_vjl=False,vj=False,gamma=0.1,objective='likelihood'):        
+                 custom_pgen_model=None ,deep=True, l2_reg=0.,l1_reg=0.,joint_vjl=False,vj=False,gamma=0.1,objective='likelihood', lr=0.001):        
         self.max_depth=max_depth
         self.max_L = max_L
         self.deep=deep
@@ -55,6 +55,8 @@ class SoNNia(Sonia):
         else:
             self.add_features(custom_pgen_model = custom_pgen_model)
         
+        self.lr = lr
+
     def add_features(self, custom_pgen_model=None):
         """Generates a list of feature_lsts for L/R pos model.
 
@@ -230,7 +232,7 @@ class SoNNia(Sonia):
         # Define model
         clipped_out=keras.layers.Lambda(lambda x: K.clip(x,min_clip,max_clip))(output_layer)
         self.model = keras.models.Model(inputs=input_layer, outputs=clipped_out)
-        self.optimizer = keras.optimizers.RMSprop()
+        self.optimizer = keras.optimizers.RMSprop(learning_rate=self.lr)
 
         if self.objective=='BCE':
             self.model.compile(optimizer=self.optimizer, loss=BinaryCrossentropy(from_logits=True),metrics=[self._likelihood, BinaryCrossentropy(from_logits=True,name='binary_crossentropy')])
