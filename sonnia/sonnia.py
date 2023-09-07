@@ -46,6 +46,7 @@ class SoNNia(Sonia):
         self.objective=objective
         self.joint_vjl=joint_vjl
         self.custom_pgen_model=custom_pgen_model
+        self.learning_rate = lr
         Sonia.__init__(self, data_seqs=data_seqs, gen_seqs=gen_seqs, chain_type=chain_type, 
                        min_energy_clip = min_energy_clip, max_energy_clip = max_energy_clip, seed = seed,l2_reg=l2_reg,l1_reg=l1_reg,vj=vj)
         
@@ -55,7 +56,6 @@ class SoNNia(Sonia):
         else:
             self.add_features(custom_pgen_model = custom_pgen_model)
         
-        self.lr = lr
 
     def add_features(self, custom_pgen_model=None):
         """Generates a list of feature_lsts for L/R pos model.
@@ -232,7 +232,7 @@ class SoNNia(Sonia):
         # Define model
         clipped_out=keras.layers.Lambda(lambda x: K.clip(x,min_clip,max_clip))(output_layer)
         self.model = keras.models.Model(inputs=input_layer, outputs=clipped_out)
-        self.optimizer = keras.optimizers.RMSprop(learning_rate=self.lr)
+        self.optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
 
         if self.objective=='BCE':
             self.model.compile(optimizer=self.optimizer, loss=BinaryCrossentropy(from_logits=True),metrics=[self._likelihood, BinaryCrossentropy(from_logits=True,name='binary_crossentropy')])
